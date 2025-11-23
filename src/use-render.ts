@@ -1,5 +1,5 @@
-import type { CSSProperties, ElementType, JSX, ReactNode } from 'react'
-import { cloneElement, createElement, isValidElement, useMemo } from 'react'
+import type { ElementType, JSX, ReactNode } from 'react'
+import { cloneElement, createElement, isValidElement } from 'react'
 import type {
   BaseComponentProps,
   ClassNameResolver,
@@ -7,10 +7,11 @@ import type {
   Renderer,
   StyleResolver,
 } from './types.ts'
-import { useMergeRefs } from './use-merge-refs.ts'
+import { useComposedRef } from './use-composed-ref.ts'
 import {
   isFunction,
-  isUndefined,
+  isString,
+  mergeProps,
   resolveClassName,
   resolveStyle,
 } from './utils.ts'
@@ -20,14 +21,13 @@ export type ComponentProps<T extends ElementType, S> = BaseComponentProps<T> & {
   children?: ((state: S) => ReactNode) | ReactNode
   className?: ClassNameResolver<S>
   style?: StyleResolver<S>
-  render?: Renderer<T, S> | JSX.Element
+  render?: Renderer<S> | JSX.Element
 }
 
 export interface UseRenderOptions<T extends ElementType, S> {
   defaultProps?: React.ComponentProps<T> & DataAttributes
   props?: ComponentProps<T, S> & DataAttributes
   ref?: React.Ref<any> | (React.Ref<any> | undefined)[]
-  state: S
 }
 
 /**
@@ -36,64 +36,55 @@ export interface UseRenderOptions<T extends ElementType, S> {
  */
 export function useRender<T extends ElementType, S>(
   tag: T,
+  state: S,
   options: UseRenderOptions<T, S>,
-): JSX.Element {
-  const { defaultProps, props = {}, ref: optionsRef, state } = options
-
-  const defaultClassName = defaultProps?.className as string | undefined
-  const defaultStyle = defaultProps?.style as CSSProperties | undefined
-  const defaultChildren = defaultProps?.children as ReactNode
+): ReactNode {
+  // Workarounds for getting the prop objects to be typed. But should still be ok as the properties we need is common to all elements
+  const defaultProps: React.ComponentProps<'div'> = options.defaultProps ?? {}
+  const props = (options.props ?? {}) as ComponentProps<'div', S>
 
   const {
-    children,
-    className: propsClassName,
-    style: propsStyle,
-    ref: propsRef,
-    render,
-    ...restProps
+    className: defaultClassName,
+    style: defaultStyle,
+    children: defaultChildren,
+    ...defaults
   } = defaultProps
-    ? { ...defaultProps, ...props }
-    : (props as ComponentProps<T, S>)
+  const { className, style, children, ref, render, ...rest } = props ?? {}
 
-  const resolvedClassName = resolveClassName(
-    defaultClassName,
-    propsClassName,
-    state,
-  )
-  const resolvedStyle = resolveStyle(defaultStyle, propsStyle, state)
+  const resolvedClassName = resolveClassName(defaultClassName, className, state)
+  const resolvedStyle = resolveStyle(defaultStyle, style, state)
 
-  const refs = useMemo(() => {
-    const refsArr = Array.isArray(optionsRef) ? optionsRef : [optionsRef]
-    if (propsRef) {
-      refsArr.push(propsRef)
-    }
-    return refsArr
-  }, [optionsRef, propsRef])
+  const refs: Array<React.Ref<any> | undefined> = Array.isArray(options.ref)
+    ? [ref, ...options.ref]
+    : [ref, options.ref]
 
-  const mergedRef = useMergeRefs(refs)
+  const mergedRef = useComposedRef(refs)
 
-  const resolvedProps = {
-    ...restProps,
-    ...(!isUndefined(resolvedClassName) && { className: resolvedClassName }),
-    ...(!isUndefined(resolvedStyle) && { style: resolvedStyle }),
-    ...(mergedRef !== null && { ref: mergedRef }),
-  } as React.ComponentProps<T>
+  // Another workaround for getting component props typed
+  const resolvedProps: React.ComponentProps<'div'> = {
+    ...mergeProps(defaults, rest),
+    ref: mergedRef,
+  }
+  if (isString(resolvedClassName)) {
+    resolvedProps.className = resolvedClassName
+  }
+  if (typeof resolvedStyle === 'object') {
+    resolvedProps.style = resolvedStyle
+  }
 
   const resolvedChildren = isFunction(children) ? children(state) : children
 
+  // For `<Component render={<a />} />`
   if (isValidElement(render)) {
-    return cloneElement(
-      render,
-      resolvedProps,
-      resolvedChildren ?? defaultChildren,
-    )
+    return cloneElement(render, resolvedProps, resolvedChildren)
   }
 
+  // For `<Component render={(state, props) => <a {...props} />)} />`
   if (isFunction(render)) {
     return render(state, {
       ...resolvedProps,
       children: resolvedChildren,
-    }) as JSX.Element
+    })
   }
 
   return createElement(tag, resolvedProps, resolvedChildren ?? defaultChildren)

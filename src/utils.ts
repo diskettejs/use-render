@@ -1,11 +1,37 @@
-import { clsx } from 'clsx'
 import type { CSSProperties } from 'react'
 import type { ClassNameResolver, StyleResolver } from './types.ts'
 
+export const isString = (value: unknown): value is string =>
+  typeof value === 'string'
 export const isFunction = (value: unknown): value is Function =>
   typeof value === 'function'
 export const isUndefined = (value: unknown): value is undefined =>
   typeof value === 'undefined'
+
+/**
+ * Merges two props objects, composing event handlers.
+ * - Event handlers (on[A-Z]) are composed: user handler runs first, then default
+ * - All other props: user props override defaults
+ */
+export function mergeProps<T extends Record<string, unknown>>(
+  defaultProps: T,
+  props: T,
+): T {
+  const result = { ...defaultProps, ...props }
+
+  for (const key in defaultProps) {
+    const isHandler = /^on[A-Z]/.test(key)
+    if (isHandler && defaultProps[key] && props[key]) {
+      ;(result as Record<string, unknown>)[key] = (...args: unknown[]) => {
+        const userResult = (props[key] as Function)(...args)
+        ;(defaultProps[key] as Function)(...args)
+        return userResult
+      }
+    }
+  }
+
+  return result
+}
 
 /**
  * Resolves and merges className values from defaultProps and props.
@@ -59,4 +85,29 @@ export function resolveStyle<State>(
   } else {
     return resolvedDefault
   }
+}
+
+type ClassValue =
+  | ClassValue[]
+  | Record<string, any>
+  | string
+  | number
+  | bigint
+  | null
+  | boolean
+  | undefined
+
+export function clsx(...inputs: ClassValue[]) {
+  let str = ''
+  let tmp
+
+  for (let i = 0; i < inputs.length; i++) {
+    if ((tmp = arguments[i])) {
+      if (isString(tmp)) {
+        str += (str && ' ') + tmp
+      }
+    }
+  }
+
+  return str
 }

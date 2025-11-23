@@ -1,34 +1,28 @@
 import type {
-  ComponentProps,
+  ComponentPropsWithRef,
   CSSProperties,
   ElementType,
   ReactNode,
 } from 'react'
 
 export type ClassNameResolver<State> =
-  | ((
-      state: State,
-      defaultClassName?: string | undefined,
-    ) => string | undefined)
+  | ((state: State, defaultClassName?: string) => string | undefined)
   | string
   | undefined
 
 export type StyleResolver<State> =
-  | ((
-      state: State,
-      defaultStyle?: CSSProperties | undefined,
-    ) => CSSProperties | undefined)
+  | ((state: State, defaultStyle?: CSSProperties) => CSSProperties | undefined)
   | CSSProperties
   | undefined
 
-export type Renderer<T extends ElementType, S> = (
+export type Renderer<S> = (
   state: S,
-  props: ComponentProps<T>,
+  props: React.HTMLAttributes<any> & { ref?: React.Ref<any> | undefined },
 ) => ReactNode
 
 export type DataAttributes = Record<`data-${string}`, string | number | boolean>
 
 export type BaseComponentProps<T extends ElementType> = Omit<
-  ComponentProps<T>,
+  ComponentPropsWithRef<T>,
   'children' | 'className' | 'style'
 >
