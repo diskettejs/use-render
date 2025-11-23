@@ -1,0 +1,56 @@
+{
+  "name": "@diskette/use-render",
+  "type": "module",
+  "version": "0.1.0",
+  "exports": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "packageManager": "pnpm@10.22.0",
+  "scripts": {
+    "dev": "tsc --watch -p tsconfig.build.json",
+    "build": "rm -rf && tsc -p tsconfig.build.json",
+    "prepublishOnly": "pnpm build",
+    "test": "vitest run",
+    "typecheck": "tsc",
+    "lint": "oxlint --type-aware src",
+    "release": "changeset publish && git push --follow-tags"
+  },
+  "peerDependencies": {
+    "@types/react": "*",
+    "react": "^18.0 || ^19.0"
+  },
+  "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.7",
+    "@types/react": "^19.2.6",
+    "@vitejs/plugin-react": "^5.1.1",
+    "@vitest/browser-playwright": "^4.0.13",
+    "oxlint": "^1.29.0",
+    "oxlint-tsgolint": "^0.8.1",
+    "prettier": "^3.6.2",
+    "react": "^19.2.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.13",
+    "vitest-browser-react": "^2.0.2"
+  },
+  "description": "_description_",
+  "homepage": "https://github.com/diskettejs/use-render#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/diskettejs/use-render.git"
+  },
+  "keywords": [],
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
+  },
+  "license": "MIT",
+  "dependencies": {
+    "clsx": "^2.1.1"
+  }
+}
