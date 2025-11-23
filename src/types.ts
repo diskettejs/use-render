@@ -6,12 +6,12 @@ import type {
 } from 'react'
 
 export type ClassNameResolver<State> =
-  | ((state: State, defaultClassName?: string) => string | undefined)
+  | ((state: State, baseClassName?: string) => string | undefined)
   | string
   | undefined
 
 export type StyleResolver<State> =
-  | ((state: State, defaultStyle?: CSSProperties) => CSSProperties | undefined)
+  | ((state: State, baseStyle?: CSSProperties) => CSSProperties | undefined)
   | CSSProperties
   | undefined
 

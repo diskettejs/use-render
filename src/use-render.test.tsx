@@ -11,7 +11,7 @@ function createBtn(defaultProps?: React.ComponentProps<'button'>) {
 
     return useRender('button', state, {
       props,
-      defaultProps: {
+      baseProps: {
         onClick: () => setIsActive((cur) => !cur),
         ...defaultProps,
       },
@@ -44,12 +44,12 @@ describe('useRender', () => {
       await expect.element(button).toHaveClass('active')
     })
 
-    test('className function receives defaultClassName as second argument', async () => {
+    test('className function receives baseClassName as second argument', async () => {
       const Button = createBtn({ className: 'btn-default' })
       const { getByRole } = await render(
         <Button
-          className={(_state, defaultClassName) =>
-            `custom ${defaultClassName ?? ''}`
+          className={(_state, baseClassName) =>
+            `custom ${baseClassName ?? ''}`
           }
         >
           Click
@@ -99,12 +99,12 @@ describe('useRender', () => {
       await expect.element(button).toHaveStyle({ backgroundColor: 'green' })
     })
 
-    test('style function receives defaultStyle as second argument', async () => {
+    test('style function receives baseStyle as second argument', async () => {
       const Button = createBtn({ style: { padding: '10px' } })
       const { getByRole } = await render(
         <Button
-          style={(_state, defaultStyle) => ({
-            ...defaultStyle,
+          style={(_state, baseStyle) => ({
+            ...baseStyle,
             color: 'blue',
           })}
         >
@@ -275,8 +275,8 @@ describe('useRender', () => {
           { isActive },
           {
             props,
-            defaultProps: {
-              onClick: (_e) => {
+            baseProps: {
+              onClick: (_e: React.MouseEvent) => {
                 setIsActive((cur) => !cur)
                 return defaultHandler()
               },

@@ -39,7 +39,7 @@ function Button(props: ButtonProps) {
   const state: ButtonState = { isPressed, isHovered }
 
   return useRender('button', state, {
-    defaultProps: {
+    baseProps: {
       className: 'btn',
       onMouseDown: () => setIsPressed(true),
       onMouseUp: () => setIsPressed(false),
@@ -83,8 +83,8 @@ Pass a function to resolve className based on component state:
 
 ```tsx
 <Button
-  className={(state, defaultClassName) =>
-    `${defaultClassName} ${state.isPressed ? 'pressed' : ''}`
+  className={(state, baseClassName) =>
+    `${baseClassName} ${state.isPressed ? 'pressed' : ''}`
   }
 >
   Press me
@@ -141,17 +141,17 @@ function useRender<T extends ElementType, S>(
 
 ```ts
 interface UseRenderOptions<T extends ElementType, S> {
-  defaultProps?: React.ComponentProps<T>
+  baseProps?: React.ComponentProps<T>
   props?: ComponentProps<T, S>
   ref?: React.Ref<any> | (React.Ref<any> | undefined)[]
 }
 ```
 
-| Option         | Description                                                        |
-| -------------- | ------------------------------------------------------------------ |
-| `defaultProps` | Default props applied to the element                               |
-| `props`        | Consumer-provided props (typically forwarded from component props) |
-| `ref`          | Ref(s) to merge with the consumer's ref                            |
+| Option      | Description                                                        |
+| ----------- | ------------------------------------------------------------------ |
+| `baseProps` | Base props applied to the element                                  |
+| `props`     | Consumer-provided props (typically forwarded from component props) |
+| `ref`       | Ref(s) to merge with the consumer's ref                            |
 
 ### `ComponentProps<T, S>`
 
@@ -170,7 +170,7 @@ type ComponentProps<T extends ElementType, S> = BaseComponentProps<T> & {
 
 ```ts
 type ClassNameResolver<S> =
-  | ((state: S, defaultClassName?: string) => string | undefined)
+  | ((state: S, baseClassName?: string) => string | undefined)
   | string
   | undefined
 ```
@@ -179,7 +179,7 @@ type ClassNameResolver<S> =
 
 ```ts
 type StyleResolver<S> =
-  | ((state: S, defaultStyle?: CSSProperties) => CSSProperties | undefined)
+  | ((state: S, baseStyle?: CSSProperties) => CSSProperties | undefined)
   | CSSProperties
   | undefined
 ```

@@ -25,14 +25,30 @@ export type ComponentProps<T extends ElementType, S> = BaseComponentProps<T> & {
 }
 
 export interface UseRenderOptions<T extends ElementType, S> {
-  defaultProps?: React.ComponentProps<T> & DataAttributes
+  baseProps?: React.ComponentProps<T> & DataAttributes
   props?: ComponentProps<T, S> & DataAttributes
   ref?: React.Ref<any> | (React.Ref<any> | undefined)[]
 }
 
 /**
- * Hook for enabling a render prop in custom components. Designed to be used by component libraries as an implementation detail
- * in providing a way to override a component's default rendered element.
+ * Hook for rendering elements with render prop support, prop merging, and state-driven className/style resolution.
+ *
+ * @example
+ * ```tsx
+ * import { useRender, ComponentProps } from '@diskette/use-render'
+ *
+ * type State = { disabled: boolean; loading: boolean }
+ * type ButtonProps = ComponentProps<'button', State>
+ *
+ * function Button(props: ButtonProps) {
+ *   const state: State = { disabled: props.disabled ?? false, loading: false }
+ *   return useRender('button', state, { props })
+ * }
+ *
+ * // Usage:
+ * <Button className={(state) => state.disabled && 'opacity-50'} />
+ * <Button render={<a href="#" />} />
+ * ```
  */
 export function useRender<T extends ElementType, S>(
   tag: T,
@@ -40,19 +56,19 @@ export function useRender<T extends ElementType, S>(
   options: UseRenderOptions<T, S>,
 ): ReactNode {
   // Workarounds for getting the prop objects to be typed. But should still be ok as the properties we need is common to all elements
-  const defaultProps: React.ComponentProps<'div'> = options.defaultProps ?? {}
+  const baseProps: React.ComponentProps<'div'> = options.baseProps ?? {}
   const props = (options.props ?? {}) as ComponentProps<'div', S>
 
   const {
-    className: defaultClassName,
-    style: defaultStyle,
-    children: defaultChildren,
-    ...defaults
-  } = defaultProps
+    className: baseClassName,
+    style: baseStyle,
+    children: baseChildren,
+    ...base
+  } = baseProps
   const { className, style, children, ref, render, ...rest } = props ?? {}
 
-  const resolvedClassName = resolveClassName(defaultClassName, className, state)
-  const resolvedStyle = resolveStyle(defaultStyle, style, state)
+  const resolvedClassName = resolveClassName(baseClassName, className, state)
+  const resolvedStyle = resolveStyle(baseStyle, style, state)
 
   const refs: Array<React.Ref<any> | undefined> = Array.isArray(options.ref)
     ? [ref, ...options.ref]
@@ -62,7 +78,7 @@ export function useRender<T extends ElementType, S>(
 
   // Another workaround for getting component props typed
   const resolvedProps: React.ComponentProps<'div'> = {
-    ...mergeProps(defaults, rest),
+    ...mergeProps(base, rest),
     ref: mergedRef,
   }
   if (isString(resolvedClassName)) {
@@ -87,5 +103,5 @@ export function useRender<T extends ElementType, S>(
     })
   }
 
-  return createElement(tag, resolvedProps, resolvedChildren ?? defaultChildren)
+  return createElement(tag, resolvedProps, resolvedChildren ?? baseChildren)
 }
