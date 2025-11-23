@@ -173,12 +173,12 @@ describe('useRender', () => {
       await expect.element(link).toHaveAttribute('href', '/path')
     })
 
-    test('render function receives state and props', async () => {
+    test('render function receives props and state', async () => {
       const Button = createBtn()
       const { getByRole } = await render(
         <Button
           className="custom"
-          render={(state, props) => (
+          render={(props, state) => (
             <a
               {...props}
               href="/path"
@@ -219,7 +219,7 @@ describe('useRender', () => {
       const Button = createBtn()
       const { getByRole } = await render(
         <Button
-          render={(state, props) => (
+          render={(props, state) => (
             <a
               {...props}
               href="/path"

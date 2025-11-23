@@ -16,8 +16,8 @@ export type StyleResolver<State> =
   | undefined
 
 export type Renderer<S> = (
-  state: S,
   props: React.HTMLAttributes<any> & { ref?: React.Ref<any> | undefined },
+  state: S,
 ) => ReactNode
 
 export type DataAttributes = Record<`data-${string}`, string | number | boolean>

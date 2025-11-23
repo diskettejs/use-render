@@ -95,12 +95,15 @@ export function useRender<T extends ElementType, S>(
     return cloneElement(render, resolvedProps, resolvedChildren)
   }
 
-  // For `<Component render={(state, props) => <a {...props} />)} />`
+  // For `<Component render={(props) => <a {...props} />)} />`
   if (isFunction(render)) {
-    return render(state, {
-      ...resolvedProps,
-      children: resolvedChildren,
-    })
+    return render(
+      {
+        ...resolvedProps,
+        children: resolvedChildren,
+      },
+      state,
+    )
   }
 
   return createElement(tag, resolvedProps, resolvedChildren ?? baseChildren)

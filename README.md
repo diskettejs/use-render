@@ -69,7 +69,7 @@ function Button(props: ButtonProps) {
 
 ```tsx
 <Button
-  render={(state, props) => (
+  render={(props, state) => (
     <a {...props} href="/path" data-pressed={state.isPressed} />
   )}
 >
@@ -184,12 +184,12 @@ type StyleResolver<S> =
   | undefined
 ```
 
-### `Renderer<T, S>`
+### `Renderer<S>`
 
 ```ts
-type Renderer<T extends ElementType, S> = (
-  state: S,
+type Renderer<S> = (
   props: ComponentPropsWithRef<T>,
+  state: S,
 ) => ReactNode
 ```
 
