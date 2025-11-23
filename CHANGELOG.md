@@ -1,5 +1,11 @@
 # @diskette/use-render
 
+## 0.5.0
+
+### Minor Changes
+
+- 2a74fa5: reordered render prop args order
+
 ## 0.4.0
 
 ### Minor Changes
