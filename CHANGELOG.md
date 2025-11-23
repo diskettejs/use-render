@@ -1,5 +1,11 @@
 # @diskette/use-render
 
+## 0.4.0
+
+### Minor Changes
+
+- 208f994: renamed useRender's defaultProps option to baseProps
+
 ## 0.3.0
 
 ### Minor Changes
