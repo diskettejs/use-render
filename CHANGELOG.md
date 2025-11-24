@@ -1,5 +1,11 @@
 # @diskette/use-render
 
+## 0.6.0
+
+### Minor Changes
+
+- 37efd7e: refactor types to fix ComponentProps render function type
+
 ## 0.5.0
 
 ### Minor Changes
