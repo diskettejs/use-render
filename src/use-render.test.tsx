@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { useRender, type ComponentProps } from './use-render.ts'
+import { type ComponentProps } from './types.ts'
+import { useRender } from './use-render.ts'
 
 type State = { isActive: boolean }
 function createBtn(defaultProps?: React.ComponentProps<'button'>) {
@@ -48,9 +49,7 @@ describe('useRender', () => {
       const Button = createBtn({ className: 'btn-default' })
       const { getByRole } = await render(
         <Button
-          className={(_state, baseClassName) =>
-            `custom ${baseClassName ?? ''}`
-          }
+          className={(_state, baseClassName) => `custom ${baseClassName ?? ''}`}
         >
           Click
         </Button>,

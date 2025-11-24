@@ -2,21 +2,22 @@ import type {
   ComponentPropsWithRef,
   CSSProperties,
   ElementType,
+  HTMLAttributes,
+  JSX,
   ReactNode,
+  Ref,
 } from 'react'
 
-export type ClassNameResolver<State> =
+export type ClassName<State> =
   | ((state: State, baseClassName?: string) => string | undefined)
   | string
-  | undefined
 
-export type StyleResolver<State> =
+export type Style<State> =
   | ((state: State, baseStyle?: CSSProperties) => CSSProperties | undefined)
   | CSSProperties
-  | undefined
 
-export type Renderer<S> = (
-  props: React.HTMLAttributes<any> & { ref?: React.Ref<any> | undefined },
+export type ComponentRenderer<S> = (
+  props: HTMLAttributes<any> & { ref?: Ref<any> | undefined },
   state: S,
 ) => ReactNode
 
@@ -26,3 +27,13 @@ export type BaseComponentProps<T extends ElementType> = Omit<
   ComponentPropsWithRef<T>,
   'children' | 'className' | 'style'
 >
+
+// This type is to be used by components for their external public props
+export type ComponentProps<T extends ElementType, S> = BaseComponentProps<T> & {
+  children?:
+    | ReactNode
+    | { bivarianceHack(state: S): ReactNode }['bivarianceHack']
+  className?: ClassName<S>
+  style?: Style<S>
+  render?: ComponentRenderer<S> | JSX.Element
+}

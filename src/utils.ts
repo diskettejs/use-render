@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { ClassNameResolver, StyleResolver } from './types.ts'
+import type { ClassName, Style } from './types.ts'
 
 export const isString = (value: unknown): value is string =>
   typeof value === 'string'
@@ -40,9 +40,9 @@ export function mergeProps<T extends Record<string, unknown>>(
  * - Function props receive the resolved default value
  */
 export function resolveClassName<State>(
-  defaultClassName: ClassNameResolver<State>,
-  propsClassName: ClassNameResolver<State>,
   state: State,
+  defaultClassName?: ClassName<State>,
+  propsClassName?: ClassName<State>,
 ): string | undefined {
   const resolvedDefault = isFunction(defaultClassName)
     ? defaultClassName(state)
@@ -66,9 +66,9 @@ export function resolveClassName<State>(
  * - Function props receive the resolved default value
  */
 export function resolveStyle<State>(
-  defaultStyle: StyleResolver<State>,
-  propsStyle: StyleResolver<State>,
   state: State,
+  defaultStyle?: Style<State>,
+  propsStyle?: Style<State>,
 ): CSSProperties | undefined {
   const resolvedDefault = isFunction(defaultStyle)
     ? defaultStyle(state)

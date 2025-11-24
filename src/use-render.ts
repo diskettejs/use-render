@@ -1,12 +1,6 @@
-import type { ElementType, JSX, ReactNode } from 'react'
+import type { ElementType, ReactNode } from 'react'
 import { cloneElement, createElement, isValidElement } from 'react'
-import type {
-  BaseComponentProps,
-  ClassNameResolver,
-  DataAttributes,
-  Renderer,
-  StyleResolver,
-} from './types.ts'
+import type { ComponentProps, DataAttributes } from './types.ts'
 import { useComposedRef } from './use-composed-ref.ts'
 import {
   isFunction,
@@ -15,14 +9,6 @@ import {
   resolveClassName,
   resolveStyle,
 } from './utils.ts'
-
-// This type is to be used by components for their external public props
-export type ComponentProps<T extends ElementType, S> = BaseComponentProps<T> & {
-  children?: ((state: S) => ReactNode) | ReactNode
-  className?: ClassNameResolver<S>
-  style?: StyleResolver<S>
-  render?: Renderer<S> | JSX.Element
-}
 
 export interface UseRenderOptions<T extends ElementType, S> {
   baseProps?: React.ComponentProps<T> & DataAttributes
@@ -53,7 +39,7 @@ export interface UseRenderOptions<T extends ElementType, S> {
 export function useRender<T extends ElementType, S>(
   tag: T,
   state: S,
-  options: UseRenderOptions<T, S>,
+  options: UseRenderOptions<T, S> = {},
 ): ReactNode {
   // Workarounds for getting the prop objects to be typed. But should still be ok as the properties we need is common to all elements
   const baseProps: React.ComponentProps<'div'> = options.baseProps ?? {}
@@ -67,8 +53,8 @@ export function useRender<T extends ElementType, S>(
   } = baseProps
   const { className, style, children, ref, render, ...rest } = props ?? {}
 
-  const resolvedClassName = resolveClassName(baseClassName, className, state)
-  const resolvedStyle = resolveStyle(baseStyle, style, state)
+  const resolvedClassName = resolveClassName(state, baseClassName, className)
+  const resolvedStyle = resolveStyle(state, baseStyle, style)
 
   const refs: Array<React.Ref<any> | undefined> = Array.isArray(options.ref)
     ? [ref, ...options.ref]
