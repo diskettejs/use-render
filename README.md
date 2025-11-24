@@ -1,6 +1,6 @@
 # useRender
 
-A React hook for component libraries that enables flexible render prop patterns, allowing consumers to override a component's default rendered element while maintaining proper `ref`, `className`, and `style` merging.
+A React hook for component libraries that lets consumers swap the rendered element—like rendering a `<a>` instead of a `<button>`—while keeping all your component's behavior intact. It handles the tricky parts: merging refs, combining props, and letting className and style respond to internal state.
 
 ## Installation
 
@@ -8,64 +8,54 @@ A React hook for component libraries that enables flexible render prop patterns,
 pnpm add @diskette/use-render
 ```
 
-## Features
+## Quick Start
 
-- **Render prop support** - Override elements via `render` prop (element or function)
-- **State-aware className** - Resolve classNames dynamically based on component state
-- **State-aware style** - Resolve styles dynamically based on component state
-- **Automatic ref merging** - Combines multiple refs seamlessly
-- **Children as render function** - Pass children as a function receiving state
-
-## Usage
-
-### Building a Component
-
-Use `useRender` inside your component to enable the render prop pattern:
+Here's a simple button component that consumers can render as any element:
 
 ```tsx
 import { useRender, type ComponentProps } from '@diskette/use-render'
 
-interface ButtonState {
-  isPressed: boolean
-  isHovered: boolean
-}
-
-type ButtonProps = ComponentProps<'button', ButtonState>
+type ButtonProps = ComponentProps<'button', { isPressed: boolean }>
 
 function Button(props: ButtonProps) {
   const [isPressed, setIsPressed] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
 
-  const state: ButtonState = { isPressed, isHovered }
-
-  return useRender('button', state, {
-    baseProps: {
-      className: 'btn',
-      onMouseDown: () => setIsPressed(true),
-      onMouseUp: () => setIsPressed(false),
-      onMouseEnter: () => setIsHovered(true),
-      onMouseLeave: () => setIsHovered(false),
+  return useRender(
+    'button',
+    { isPressed },
+    {
+      baseProps: {
+        className: 'btn',
+        onMouseDown: () => setIsPressed(true),
+        onMouseUp: () => setIsPressed(false),
+      },
+      props,
     },
-    props,
-  })
+  )
 }
 ```
 
-### Consuming the Component
-
-#### Default Usage
+Now consumers can use it normally, or swap the element entirely:
 
 ```tsx
+// Renders a <button>
 <Button className="primary">Click me</Button>
+
+// Renders an <a> with all the button's behavior
+<Button render={<a href="/path" />}>Go somewhere</Button>
 ```
 
-#### Override with Element
+## Usage
+
+### Overriding the `Element`
+
+Pass a JSX element to `render` and it will be cloned with your component's props:
 
 ```tsx
 <Button render={<a href="/path" />}>Link styled as button</Button>
 ```
 
-#### Override with Function
+Or pass a function to get full control over rendering, with access to both props and state:
 
 ```tsx
 <Button
@@ -77,9 +67,9 @@ function Button(props: ButtonProps) {
 </Button>
 ```
 
-### State-Aware className
+### State-Aware `className`
 
-Pass a function to resolve className based on component state:
+Pass a function to compute `className` based on component state. The second argument gives you access to the base `className` set by the component:
 
 ```tsx
 <Button
@@ -91,15 +81,15 @@ Pass a function to resolve className based on component state:
 </Button>
 ```
 
-Or pass a string to merge with the default className (uses `clsx`):
+Or just pass a string. It will be merged with the default `className`:
 
 ```tsx
 <Button className="primary large">Click me</Button>
 ```
 
-### State-Aware style
+### State-Aware style `(CSSProperties)`
 
-Pass a function to resolve styles based on component state:
+Same pattern works for inline styles:
 
 ```tsx
 <Button
@@ -114,83 +104,53 @@ Pass a function to resolve styles based on component state:
 
 ### Children as Render Function
 
-Access state in children:
+Access state by passing a function:
 
 ```tsx
 <Button>{(state) => (state.isPressed ? 'Pressing...' : 'Click me')}</Button>
 ```
 
+### `render` vs `children` as Function
+
+You might wonder why both exist—most libraries pick one or the other. They serve different purposes:
+
+- **`render`** swaps the element itself. Use it when you need a `<a>` instead of a `<button>`, or want to integrate with a router's `<Link>`.
+- **`children` as function** changes what's inside the element. Use it when the content should react to internal state.
+
+They compose naturally—you can use both at once:
+
+```tsx
+<Button render={<a href="/path" />}>
+  {(state) => (state.isPressed ? 'Going...' : 'Go somewhere')}
+</Button>
+```
+
 ## API
 
-### `useRender(tag, options)`
+### `useRender(tag, state, options)`
 
 ```ts
 function useRender<T extends ElementType, S>(
   tag: T,
-  state,
+  state: S,
   options: UseRenderOptions<T, S>,
 ): ReactNode
 ```
 
-#### Parameters
+| Parameter           | Description                                                        |
+| ------------------- | ------------------------------------------------------------------ |
+| `tag`               | Default element type (e.g., `'button'`, `'div'`)                   |
+| `state`             | Component state passed to resolvers and render functions           |
+| `options.baseProps` | Base props applied to the element (your component's defaults)      |
+| `options.props`     | Consumer-provided props (typically forwarded from component props) |
+| `options.ref`       | Ref(s) to merge with the consumer's ref                            |
 
-- `tag` - The default element type to render (e.g., `'button'`, `'div'`)
-- `options` - Configuration object
+### `ComponentProps<ElementType, State>`
 
-#### Options
-
-```ts
-interface UseRenderOptions<T extends ElementType, S> {
-  baseProps?: React.ComponentProps<T>
-  props?: ComponentProps<T, S>
-  ref?: React.Ref<any> | (React.Ref<any> | undefined)[]
-}
-```
-
-| Option      | Description                                                        |
-| ----------- | ------------------------------------------------------------------ |
-| `baseProps` | Base props applied to the element                                  |
-| `props`     | Consumer-provided props (typically forwarded from component props) |
-| `ref`       | Ref(s) to merge with the consumer's ref                            |
-
-### `ComponentProps<T, S>`
-
-Type for component's external public props. Components using `useRender` should use this type (or extend from it) instead of `React.ComponentProps`. It's essentially `React.ComponentProps<T>` augmented with state-aware `className`, `style`, `children`, and the `render` prop:
+Use this type for your component's public props. It extends `React.ComponentProps<T>` and augments `className`, `style`, and `children` to be state-aware as well as provide the `render` prop:
 
 ```ts
-type ComponentProps<T extends ElementType, S> = BaseComponentProps<T> & {
-  children?: ((state: S) => ReactNode) | ReactNode
-  className?: ClassNameResolver<S>
-  style?: StyleResolver<S>
-  render?: Renderer<T, S> | JSX.Element
-}
-```
-
-### `ClassNameResolver<S>`
-
-```ts
-type ClassNameResolver<S> =
-  | ((state: S, baseClassName?: string) => string | undefined)
-  | string
-  | undefined
-```
-
-### `StyleResolver<S>`
-
-```ts
-type StyleResolver<S> =
-  | ((state: S, baseStyle?: CSSProperties) => CSSProperties | undefined)
-  | CSSProperties
-  | undefined
-```
-
-### `Renderer<S>`
-
-```ts
-type Renderer<S> = (
-  props: ComponentPropsWithRef<T>,
-  state: S,
-) => ReactNode
+type ButtonProps = ComponentProps<'button', ButtonState>
 ```
 
 ## License
