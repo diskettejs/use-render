@@ -1,5 +1,11 @@
 # @diskette/use-render
 
+## 0.6.1
+
+### Patch Changes
+
+- 409d6e3: add undefined to className and style props
+
 ## 0.6.0
 
 ### Minor Changes

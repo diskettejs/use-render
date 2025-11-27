@@ -1,7 +1,7 @@
 {
   "name": "@diskette/use-render",
   "type": "module",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "exports": "./dist/index.js",
   "files": [
     "dist"
@@ -13,7 +13,7 @@
     "test": "vitest run --browser.headless",
     "typecheck": "tsc",
     "lint": "oxlint --type-aware src",
-    "release": "changeset publish && git push --follow-tags"
+    "release": "changeset version && changeset publish && git push --follow-tags"
   },
   "peerDependencies": {
     "@types/react": "^18.0.0 || ^19.0.0",
