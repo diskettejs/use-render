@@ -52,7 +52,7 @@ export function resolveClassName<State>(
     if (isFunction(propsClassName)) {
       return propsClassName(state, resolvedDefault)
     } else {
-      return clsx(resolvedDefault, propsClassName)
+      return cx(resolvedDefault, propsClassName)
     }
   } else {
     return resolvedDefault
@@ -87,27 +87,9 @@ export function resolveStyle<State>(
   }
 }
 
-type ClassValue =
-  | ClassValue[]
-  | Record<string, any>
-  | string
-  | number
-  | bigint
-  | null
-  | boolean
-  | undefined
-
-export function clsx(...inputs: ClassValue[]) {
-  let str = ''
-  let tmp
-
-  for (let i = 0; i < inputs.length; i++) {
-    if ((tmp = arguments[i])) {
-      if (isString(tmp)) {
-        str += (str && ' ') + tmp
-      }
-    }
-  }
-
-  return str
+/**
+ * Returns a string with the truthy values of `args` separated by space.
+ */
+export function cx(...args: Array<string | null | false | 0 | undefined>) {
+  return args.filter(Boolean).join(' ') || undefined
 }

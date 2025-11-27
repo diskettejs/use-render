@@ -33,7 +33,8 @@ export type ComponentProps<T extends ElementType, S> = BaseComponentProps<T> & {
   children?:
     | ReactNode
     | { bivarianceHack(state: S): ReactNode }['bivarianceHack']
-  className?: ClassName<S>
-  style?: Style<S>
+    | undefined
+  className?: ClassName<S> | undefined
+  style?: Style<S> | undefined
   render?: ComponentRenderer<S> | JSX.Element
 }
