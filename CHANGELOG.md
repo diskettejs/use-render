@@ -1,5 +1,11 @@
 # @diskette/use-render
 
+## 0.7.0
+
+### Minor Changes
+
+- 1598265: initial implementation of userRenderContainer
+
 ## 0.6.1
 
 ### Patch Changes

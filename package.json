@@ -1,7 +1,7 @@
 {
   "name": "@diskette/use-render",
   "type": "module",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "exports": "./dist/index.js",
   "files": [
     "dist"
