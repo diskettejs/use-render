@@ -1,5 +1,12 @@
 # @diskette/use-render
 
+## 0.8.0
+
+### Minor Changes
+
+- f4729e7: new useRenderSlot
+- 6cec19a: refactor ref composition
+
 ## 0.7.0
 
 ### Minor Changes
