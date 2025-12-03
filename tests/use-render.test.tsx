@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { type ComponentProps } from './types.ts'
-import { useRender } from './use-render.ts'
+import { type ComponentProps } from '../src/types.ts'
+import { useRender } from '../src/use-render.ts'
 
 type State = { isActive: boolean }
 function createBtn(defaultProps?: React.ComponentProps<'button'>) {

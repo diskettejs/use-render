@@ -19,6 +19,7 @@
     "stripInternal": true,
     "noUncheckedSideEffectImports": true,
     "noFallthroughCasesInSwitch": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "strictFunctionTypes": true
   }
 }
