@@ -56,11 +56,7 @@ export function useRender<T extends ElementType, S>(
   const resolvedClassName = resolveClassName(state, baseClassName, className)
   const resolvedStyle = resolveStyle(state, baseStyle, style)
 
-  const refs: Array<React.Ref<any> | undefined> = Array.isArray(options.ref)
-    ? [ref, ...options.ref]
-    : [ref, options.ref]
-
-  const mergedRef = useComposedRef(refs)
+  const mergedRef = useComposedRef(ref, options.ref)
 
   // Another workaround for getting component props typed
   const resolvedProps: React.ComponentProps<'div'> = {
@@ -83,13 +79,7 @@ export function useRender<T extends ElementType, S>(
 
   // For `<Component render={(props) => <a {...props} />)} />`
   if (isFunction(render)) {
-    return render(
-      {
-        ...resolvedProps,
-        children: resolvedChildren,
-      },
-      state,
-    )
+    return render({ ...resolvedProps, children: resolvedChildren }, state)
   }
 
   return createElement(tag, resolvedProps, resolvedChildren ?? baseChildren)

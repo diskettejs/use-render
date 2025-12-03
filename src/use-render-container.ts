@@ -114,6 +114,7 @@ export interface UseRenderContainerResult<T extends ElementType, ItemState> {
  * <DateList>{(state) => <CustomDateItem date={state.date} />}</DateList>
  * ```
  */
+// TODO: refactor args order, useRenderContainer('div', props, options). `props` is what defines what the interface is for the state
 export function useRenderContainer<
   T extends ElementType,
   ContainerState,
@@ -152,10 +153,7 @@ export function useRenderContainer<
   const resolvedStyle = resolveStyle(containerState, baseStyle, style)
 
   // Compose refs
-  const refs: Array<Ref<any> | undefined> = Array.isArray(options.ref)
-    ? [ref, ...options.ref]
-    : [ref, options.ref]
-  const mergedRef = useComposedRef(refs)
+  const mergedRef = useComposedRef(ref, options.ref)
 
   // Build resolved container props (memoized for stable useCallback reference)
   const resolvedProps = useMemo(() => {
