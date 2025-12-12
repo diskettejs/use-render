@@ -1,5 +1,11 @@
 # @diskette/use-render
 
+## 0.9.0
+
+### Minor Changes
+
+- 3a2cc5a: add undefined to DataAttributes
+
 ## 0.8.0
 
 ### Minor Changes
