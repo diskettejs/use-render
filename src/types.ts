@@ -21,7 +21,10 @@ export type ComponentRenderer<S> = (
   state: S,
 ) => ReactNode
 
-export type DataAttributes = Record<`data-${string}`, string | number | boolean>
+export type DataAttributes = Record<
+  `data-${string}`,
+  string | number | boolean | undefined
+>
 
 export type BaseComponentProps<T extends ElementType> = Omit<
   ComponentPropsWithRef<T>,
