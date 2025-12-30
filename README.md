@@ -1,158 +1,202 @@
 # useRender
 
-A React hook for component libraries that lets consumers swap the rendered element—like rendering a `<a>` instead of a `<button>`—while keeping all your component's behavior intact. It handles the tricky parts: merging refs, combining props, and letting className and style respond to internal state.
-
-## Installation
+React hooks for building components with render prop composition and type-safe state-driven styling.
 
 ```bash
 pnpm add @diskette/use-render
 ```
 
-## Quick Start
+## Overview
 
-Here's a simple button component that consumers can render as any element:
+When building component libraries, you often need to let consumers customize rendering to:
+
+- swap the underlying element
+- access internal state for styling
+- compose refs and event handlers.
+
+These hooks handle that plumbing:
+
+- **Component authors** get prop merging, ref composition, and render prop support out of the box
+- **Consumers** get type-safe APIs where `className`, `style`, and `children` can be functions of component state
+
+## `useRender` — Stateful Components
+
+For components that expose internal state to consumers. The state flows through `className`, `style`, `children`, and `render` as callback parameters.
+
+**Component author:**
 
 ```tsx
-import { useRender, type ComponentProps } from '@diskette/use-render'
+import { useRender, ComponentProps } from '@diskette/use-render'
 
-type ButtonProps = ComponentProps<'button', { isPressed: boolean }>
+type State = { disabled: boolean; loading: boolean }
+type ButtonProps = ComponentProps<'button', State>
 
 function Button(props: ButtonProps) {
-  const [isPressed, setIsPressed] = useState(false)
+  const state: State = { disabled: props.disabled ?? false, loading: false }
+  return useRender('button', state, { props })
+}
+```
 
-  return useRender(
-    'button',
-    { isPressed },
-    {
-      baseProps: {
-        className: 'btn',
-        onMouseDown: () => setIsPressed(true),
-        onMouseUp: () => setIsPressed(false),
-      },
-      props,
-    },
+## `useRenderSlot` — Stateless Slots
+
+For wrapper components that don't expose internal state. Consumers can still swap the element or pass props—they just won't get state callbacks.
+
+**Component author:**
+
+```tsx
+import { useRenderSlot, SlotProps } from '@diskette/use-render'
+
+type CardProps = SlotProps<'div'>
+
+function Card(props: CardProps) {
+  return useRenderSlot('div', { props, baseProps: { className: 'card' } })
+}
+```
+
+**Consumer:**
+
+```tsx
+<Card className="card-primary">Content</Card>
+<Card render={<section />}>Content</Card>
+<Card render={(props) => <article {...props} />}>Content</Card>
+```
+
+Props merge automatically—`className` and `style` combine, refs compose, event handlers chain (consumer runs first). The `render` prop receives only `props` since there's no state to pass.
+
+**Consumer:**
+
+```tsx
+// State-driven className
+<Button className={(state) => state.disabled ? 'opacity-50' : undefined} />
+
+// State-driven className with access to base className
+<Button className={(state, base) => `${base} ${state.disabled ? 'opacity-50' : ''}`} />
+
+// State-driven style
+<Button style={(state) => ({ opacity: state.disabled ? 0.5 : 1 })} />
+
+// State-driven style with access to base style
+<Button style={(state, base) => ({ ...base, opacity: state.disabled ? 0.5 : 1 })} />
+
+// State-driven children
+<Button>{(state) => state.loading ? 'Loading...' : 'Submit'}</Button>
+
+// Render prop with state access
+<Button render={(props, state) => <a {...props} aria-busy={state.loading} />} />
+```
+
+The `render` callback receives `(props, state)` for full control over both props and rendering.
+
+## `useRenderContainer` — Containers with Items
+
+For list-like components with two levels of state: container-level (e.g., item count) and item-level (e.g., index, value). The `className` and `style` callbacks receive container state, while `children` receives item state.
+
+**Component author:**
+
+```tsx
+import { useRenderContainer, ContainerProps } from '@diskette/use-render'
+
+type ContainerState = { count: number }
+type ItemState = { index: number; value: string }
+type ListProps = ContainerProps<'ul', ContainerState, ItemState>
+
+function List({ items, ...props }: ListProps & { items: string[] }) {
+  const { Container, renderItem, containerProps } = useRenderContainer(
+    'ul',
+    { count: items.length },
+    { props, baseProps: { children: (item) => <li>{item.value}</li> } },
+  )
+  // containerProps provides direct access to resolved props if needed
+  return (
+    <Container>
+      {items.map((v, i) => renderItem({ index: i, value: v }))}
+    </Container>
   )
 }
 ```
 
-Now consumers can use it normally, or swap the element entirely:
+**Consumer:**
 
 ```tsx
-// Renders a <button>
-<Button className="primary">Click me</Button>
+// Container className receives ContainerState
+<List items={data} className={(state) => state.count > 5 ? 'scrollable' : undefined} />
 
-// Renders an <a> with all the button's behavior
-<Button render={<a href="/path" />}>Go somewhere</Button>
+// Children function receives ItemState
+<List items={data}>{(item) => <li>{item.index + 1}. {item.value}</li>}</List>
+
+// Swap container element
+<List items={data} render={<ol />} />
 ```
 
-## Usage
+## Props Types
 
-### Overriding the `Element`
+Each hook has a corresponding type for your component's public API:
 
-Pass a JSX element to `render` and it will be cloned with your component's props:
+| Hook                 | Props Type                  | State            |
+| -------------------- | --------------------------- | ---------------- |
+| `useRenderSlot`      | `SlotProps<T>`              | None             |
+| `useRender`          | `ComponentProps<T, S>`      | Single state     |
+| `useRenderContainer` | `ContainerProps<T, CS, IS>` | Container + Item |
+
+These extend the element's native props, adding `render` and (for stateful hooks) function forms of `className`, `style`, and `children`.
+
+## What the Hooks Handle
+
+- **Render prop** — swap the element via `render={<a />}` or `render={(props) => ...}`
+- **Ref composition** — refs from consumer, base props, and options are merged
+- **Event handler chaining** — consumer handlers run first, then base handlers
+- **className/style merging** — static values combine; functions receive state and the resolved base value as parameters
+
+## Ref Composition
+
+Component libraries often need internal ref access for focus management, measurements, or imperative APIs—while still letting consumers attach their own refs. The hooks handle this automatically.
+
+**Component author:**
 
 ```tsx
-<Button render={<a href="/path" />}>Link styled as button</Button>
+import { useRef, useImperativeHandle } from 'react'
+import { useRender, ComponentProps } from '@diskette/use-render'
+
+type State = { open: boolean }
+type ComboboxProps = ComponentProps<'input', State>
+
+export interface ComboboxRef {
+  focus: () => void
+  clear: () => void
+}
+
+function Combobox({
+  ref,
+  ...props
+}: ComboboxProps & { ref?: React.Ref<ComboboxRef> }) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const state: State = { open: false }
+
+  // Expose imperative API to consumers
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current?.focus(),
+    clear: () => {
+      if (inputRef.current) inputRef.current.value = ''
+    },
+  }))
+
+  // Internal ref composes with any ref passed through props
+  return useRender('input', state, { props, ref: inputRef })
+}
 ```
 
-Or pass a function to get full control over rendering, with access to both props and state:
+**Consumer:**
 
 ```tsx
-<Button
-  render={(props, state) => (
-    <a {...props} href="/path" data-pressed={state.isPressed} />
-  )}
->
-  Link with state access
-</Button>
+const inputRef = useRef<HTMLInputElement>(null)
+const comboboxRef = useRef<ComboboxRef>(null)
+
+// Direct element access
+<Combobox ref={inputRef} />
+
+// Imperative handle access
+<Combobox ref={comboboxRef} />
+comboboxRef.current?.focus()
 ```
 
-### State-Aware `className`
-
-Pass a function to compute `className` based on component state. The second argument gives you access to the base `className` set by the component:
-
-```tsx
-<Button
-  className={(state, baseClassName) =>
-    `${baseClassName} ${state.isPressed ? 'pressed' : ''}`
-  }
->
-  Press me
-</Button>
-```
-
-Or just pass a string. It will be merged with the default `className`:
-
-```tsx
-<Button className="primary large">Click me</Button>
-```
-
-### State-Aware style `(CSSProperties)`
-
-Same pattern works for inline styles:
-
-```tsx
-<Button
-  style={(state) => ({
-    backgroundColor: state.isPressed ? 'darkblue' : 'blue',
-    transform: state.isPressed ? 'scale(0.98)' : undefined,
-  })}
->
-  Press me
-</Button>
-```
-
-### Children as Render Function
-
-Access state by passing a function:
-
-```tsx
-<Button>{(state) => (state.isPressed ? 'Pressing...' : 'Click me')}</Button>
-```
-
-### `render` vs `children` as Function
-
-You might wonder why both exist—most libraries pick one or the other. They serve different purposes:
-
-- **`render`** swaps the element itself. Use it when you need a `<a>` instead of a `<button>`, or want to integrate with a router's `<Link>`.
-- **`children` as function** changes what's inside the element. Use it when the content should react to internal state.
-
-They compose naturally—you can use both at once:
-
-```tsx
-<Button render={<a href="/path" />}>
-  {(state) => (state.isPressed ? 'Going...' : 'Go somewhere')}
-</Button>
-```
-
-## API
-
-### `useRender(tag, state, options)`
-
-```ts
-function useRender<T extends ElementType, S>(
-  tag: T,
-  state: S,
-  options: UseRenderOptions<T, S>,
-): ReactNode
-```
-
-| Parameter           | Description                                                        |
-| ------------------- | ------------------------------------------------------------------ |
-| `tag`               | Default element type (e.g., `'button'`, `'div'`)                   |
-| `state`             | Component state passed to resolvers and render functions           |
-| `options.baseProps` | Base props applied to the element (your component's defaults)      |
-| `options.props`     | Consumer-provided props (typically forwarded from component props) |
-| `options.ref`       | Ref(s) to merge with the consumer's ref                            |
-
-### `ComponentProps<ElementType, State>`
-
-Use this type for your component's public props. It extends `React.ComponentProps<T>` and augments `className`, `style`, and `children` to be state-aware as well as provide the `render` prop:
-
-```ts
-type ButtonProps = ComponentProps<'button', ButtonState>
-```
-
-## License
-
-[MIT](./LICENSE) License
+The `options.ref` parameter accepts a single ref or an array of refs. All refs—from `options.ref`, `baseProps.ref`, and consumer `props.ref`—are composed into a single callback ref that updates all sources and handles cleanup.
