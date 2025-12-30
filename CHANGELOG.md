@@ -1,5 +1,11 @@
 # @diskette/use-render
 
+## 0.10.0
+
+### Minor Changes
+
+- 88f168c: add pure function renderSlot
+
 ## 0.9.0
 
 ### Minor Changes
