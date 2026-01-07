@@ -1,7 +1,7 @@
 import type {
-  CSSProperties,
+  ComponentProps,
+  ComponentPropsWithRef,
   ElementType,
-  HTMLAttributes,
   JSX,
   ReactNode,
 } from 'react'
@@ -9,19 +9,16 @@ import { cloneElement, createElement, isValidElement } from 'react'
 import type { DataAttributes } from '../types.ts'
 import { cx, isFunction, isString, mergeProps } from '../utils.ts'
 
-export type SlotRenderer = (props: HTMLAttributes<any>) => ReactNode
+export type SlotRenderer<T extends ElementType> = (
+  props: ComponentPropsWithRef<T>,
+) => ReactNode
 
-export type SlotProps<T extends ElementType> = Omit<
-  React.ComponentProps<T>,
-  'className' | 'style' | 'ref'
-> & {
-  className?: string | undefined
-  style?: CSSProperties | undefined
-  render?: SlotRenderer | JSX.Element
+export type SlotProps<T extends ElementType> = ComponentPropsWithRef<T> & {
+  render?: SlotRenderer<T> | JSX.Element
 }
 
 export interface RenderSlotOptions<T extends ElementType> {
-  baseProps?: Omit<React.ComponentProps<T>, 'ref'> & DataAttributes
+  baseProps?: ComponentProps<T> & DataAttributes
   props?: SlotProps<T> & DataAttributes
 }
 
@@ -52,7 +49,7 @@ export function renderSlot<T extends ElementType>(
   tag: T,
   options: RenderSlotOptions<T> = {},
 ): ReactNode {
-  const baseProps = (options.baseProps ?? {}) as React.ComponentProps<'div'>
+  const baseProps = (options.baseProps ?? {}) as ComponentProps<'div'>
   const props = (options.props ?? {}) as SlotProps<'div'>
 
   const {
@@ -67,7 +64,7 @@ export function renderSlot<T extends ElementType>(
   const resolvedStyle =
     baseStyle || style ? { ...baseStyle, ...style } : undefined
 
-  const resolvedProps: React.ComponentProps<'div'> = {
+  const resolvedProps: ComponentProps<'div'> = {
     ...mergeProps(base, rest),
   }
   if (isString(resolvedClassName)) {

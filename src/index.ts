@@ -3,11 +3,8 @@ export { useRenderContainer } from './use-render-container.ts'
 export { useRenderSlot } from './use-render-slot.ts'
 
 export type { UseRenderOptions } from './use-render.ts'
-export type {
-  SlotProps,
-  SlotRenderer,
-  UseRenderSlotOptions,
-} from './use-render-slot.ts'
+export type { UseRenderSlotOptions } from './use-render-slot.ts'
+export type { SlotProps, SlotRenderer } from './fns/render-slot.ts'
 export type {
   ContainerBaseProps,
   ContainerProps,

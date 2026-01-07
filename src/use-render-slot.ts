@@ -1,33 +1,13 @@
-import type {
-  ComponentPropsWithRef,
-  CSSProperties,
-  ElementType,
-  HTMLAttributes,
-  JSX,
-  ReactNode,
-  Ref,
-} from 'react'
-import { cloneElement, createElement, isValidElement } from 'react'
-import type { DataAttributes } from './types.ts'
+import type { ElementType, ReactNode, Ref } from 'react'
+import type { RenderSlotOptions } from './fns/render-slot.ts'
+import { renderSlot } from './fns/render-slot.ts'
 import { useComposedRef } from './use-composed-ref.ts'
-import { cx, isFunction, isString, mergeProps } from './utils.ts'
 
-export type SlotRenderer = (
-  props: HTMLAttributes<any> & { ref?: Ref<any> | undefined },
-) => ReactNode
+export type { SlotProps, SlotRenderer } from './fns/render-slot.ts'
 
-export type SlotProps<T extends ElementType> = Omit<
-  ComponentPropsWithRef<T>,
-  'className' | 'style'
-> & {
-  className?: string | undefined
-  style?: CSSProperties | undefined
-  render?: SlotRenderer | JSX.Element
-}
-
-export interface UseRenderSlotOptions<T extends ElementType> {
-  baseProps?: React.ComponentProps<T> & DataAttributes
-  props?: SlotProps<T> & DataAttributes
+export interface UseRenderSlotOptions<
+  T extends ElementType,
+> extends RenderSlotOptions<T> {
   ref?: Ref<any> | (Ref<any> | undefined)[]
 }
 
@@ -58,45 +38,15 @@ export function useRenderSlot<T extends ElementType>(
   tag: T,
   options: UseRenderSlotOptions<T> = {},
 ): ReactNode {
-  const baseProps: React.ComponentProps<'div'> = options.baseProps ?? {}
-  const props = (options.props ?? {}) as SlotProps<'div'>
+  const mergedRef = useComposedRef(options.props?.ref, options.ref)
+  const renderOptions: RenderSlotOptions<T> = {}
 
-  const {
-    className: baseClassName,
-    style: baseStyle,
-    children: baseChildren,
-    ...base
-  } = baseProps
-  const { className, style, children, ref, render, ...rest } = props
-
-  const resolvedClassName = cx(baseClassName, className)
-  const resolvedStyle =
-    baseStyle || style ? { ...baseStyle, ...style } : undefined
-
-  const mergedRef = useComposedRef(ref, options.ref)
-
-  const resolvedProps: React.ComponentProps<'div'> = {
-    ...mergeProps(base, rest),
-    ref: mergedRef,
+  if (options.props) {
+    renderOptions.props = { ...options.props, ref: mergedRef }
   }
-  if (isString(resolvedClassName)) {
-    resolvedProps.className = resolvedClassName
-  }
-  if (typeof resolvedStyle === 'object') {
-    resolvedProps.style = resolvedStyle
+  if (options.baseProps) {
+    renderOptions.baseProps = options.baseProps
   }
 
-  const resolvedChildren = children ?? baseChildren
-
-  // For `<Component render={<a />} />`
-  if (isValidElement(render)) {
-    return cloneElement(render, resolvedProps, resolvedChildren)
-  }
-
-  // For `<Component render={(props) => <a {...props} />)} />`
-  if (isFunction(render)) {
-    return render({ ...resolvedProps, children: resolvedChildren })
-  }
-
-  return createElement(tag, resolvedProps, resolvedChildren)
+  return renderSlot(tag, renderOptions)
 }
