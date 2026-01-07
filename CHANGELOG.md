@@ -1,5 +1,11 @@
 # @diskette/use-render
 
+## 0.11.0
+
+### Minor Changes
+
+- 99299b6: refactor useRenderSlot internals to use renderSlot
+
 ## 0.10.0
 
 ### Minor Changes
