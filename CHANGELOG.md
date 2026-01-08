@@ -1,5 +1,11 @@
 # @diskette/use-render
 
+## 0.11.1
+
+### Patch Changes
+
+- ae1c2a1: fix renderSlot render function types
+
 ## 0.11.0
 
 ### Minor Changes
