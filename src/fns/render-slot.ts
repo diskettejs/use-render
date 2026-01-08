@@ -2,20 +2,23 @@ import type {
   ComponentProps,
   ComponentPropsWithRef,
   ElementType,
+  HTMLAttributes,
   JSX,
   ReactNode,
+  Ref,
 } from 'react'
 import { cloneElement, createElement, isValidElement } from 'react'
 import type { DataAttributes } from '../types.ts'
 import { cx, isFunction, isString, mergeProps } from '../utils.ts'
 
-export type SlotRenderer<T extends ElementType> = (
-  props: ComponentPropsWithRef<T>,
+export type SlotRenderer = (
+  props: HTMLAttributes<any> & { ref?: Ref<any> | undefined },
 ) => ReactNode
 
-export type SlotProps<T extends ElementType> = ComponentPropsWithRef<T> & {
-  render?: SlotRenderer<T> | JSX.Element
-}
+export type SlotProps<T extends ElementType> = ComponentPropsWithRef<T> &
+  DataAttributes & {
+    render?: SlotRenderer | JSX.Element
+  }
 
 export interface RenderSlotOptions<T extends ElementType> {
   baseProps?: ComponentProps<T> & DataAttributes
