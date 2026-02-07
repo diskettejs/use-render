@@ -1,5 +1,11 @@
 # @diskette/use-render
 
+## 0.12.0
+
+### Minor Changes
+
+- 0495385: improve props merging
+
 ## 0.11.1
 
 ### Patch Changes
