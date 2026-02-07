@@ -1,4 +1,5 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactElement, ReactNode } from 'react'
+import { cloneElement } from 'react'
 import type { ClassName, Style } from './types.ts'
 
 export const isString = (value: unknown): value is string =>
@@ -92,4 +93,44 @@ export function resolveStyle<State>(
  */
 export function cx(...args: Array<string | null | false | 0 | undefined>) {
   return args.filter(Boolean).join(' ') || undefined
+}
+
+/**
+ * Clones a React element, merging its props with resolved props.
+ * - className values are merged via `cx`
+ * - style objects are spread-merged (render element styles as base, resolved styles on top)
+ * - event handlers are composed via `mergeProps`
+ * - children are set if provided
+ */
+export function cloneRenderElement(
+  render: ReactElement,
+  resolvedProps: React.ComponentProps<'div'>,
+  children?: ReactNode,
+): ReactNode {
+  const {
+    className: renderClassName,
+    style: renderStyle,
+    children: _renderChildren,
+    ...renderRest
+  } = render.props as React.ComponentProps<'div'>
+  const {
+    className: resolvedClassName,
+    style: resolvedStyle,
+    children: _resolvedChildren,
+    ...resolvedRest
+  } = resolvedProps
+
+  const merged: React.ComponentProps<'div'> = mergeProps(renderRest, resolvedRest)
+
+  const mergedClassName = cx(renderClassName, resolvedClassName)
+  if (isString(mergedClassName)) {
+    merged.className = mergedClassName
+  }
+  if (renderStyle || resolvedStyle) {
+    merged.style = { ...renderStyle, ...resolvedStyle }
+  }
+  if (children !== undefined) {
+    merged.children = children
+  }
+  return cloneElement(render, merged)
 }

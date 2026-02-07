@@ -88,4 +88,52 @@ describe('useRenderContainer', () => {
 
     await expect.element(getByRole('list')).toHaveClass('many')
   })
+
+  describe('element render prop merging', () => {
+    test('element render prop merges its own className with resolved className', async () => {
+      const items = ['Apple']
+      const List = createList(items, { className: 'base' })
+      const { getByRole } = await render(
+        <List className="consumer" render={<ol className="render-el" />} />,
+      )
+      const list = getByRole('list')
+      await expect.element(list).toHaveClass('render-el')
+      await expect.element(list).toHaveClass('base')
+      await expect.element(list).toHaveClass('consumer')
+    })
+
+    test('element render prop merges style with resolved style winning on conflict', async () => {
+      const items = ['Apple']
+      const List = createList(items, { style: { padding: '10px' } })
+      const { getByRole } = await render(
+        <List
+          style={{ padding: '20px', color: 'red' }}
+          render={<ol style={{ padding: '5px', fontWeight: 'bold' }} />}
+        />,
+      )
+      const list = getByRole('list')
+      await expect.element(list).toHaveStyle({
+        padding: '20px',
+        fontWeight: 'bold',
+        color: 'red',
+      })
+    })
+
+    test('element render prop composes event handlers from all sources', async () => {
+      const callOrder: string[] = []
+      const items = ['Apple']
+      const List = createList(items, {
+        onMouseEnter: () => callOrder.push('base'),
+      })
+      const { getByRole } = await render(
+        <List
+          onMouseEnter={() => callOrder.push('consumer')}
+          render={<ol onMouseEnter={() => callOrder.push('render-el')} />}
+        />,
+      )
+      const list = getByRole('list')
+      await list.hover()
+      expect(callOrder).toEqual(['consumer', 'base', 'render-el'])
+    })
+  })
 })

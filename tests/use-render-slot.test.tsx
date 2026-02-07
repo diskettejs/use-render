@@ -117,6 +117,56 @@ describe('useRenderSlot', () => {
       const section = getByRole('region')
       await expect.element(section).toHaveTextContent('Inner content')
     })
+
+    test('element render prop merges its own className with resolved className', async () => {
+      const Card = createCard({ className: 'base' })
+      const { getByRole } = await render(
+        <Card className="consumer" render={<a href="/path" className="render-el" />}>
+          Link
+        </Card>,
+      )
+      const link = getByRole('link')
+      await expect.element(link).toHaveAttribute('href', '/path')
+      await expect.element(link).toHaveClass('render-el')
+      await expect.element(link).toHaveClass('base')
+      await expect.element(link).toHaveClass('consumer')
+    })
+
+    test('element render prop merges style with resolved style winning on conflict', async () => {
+      const Card = createCard({ style: { padding: '10px' } })
+      const { getByRole } = await render(
+        <Card
+          style={{ padding: '20px', color: 'red' }}
+          render={<a href="/path" style={{ padding: '5px', fontWeight: 'bold' }} />}
+        >
+          Link
+        </Card>,
+      )
+      const link = getByRole('link')
+      await expect.element(link).toHaveStyle({
+        padding: '20px',
+        fontWeight: 'bold',
+        color: 'red',
+      })
+    })
+
+    test('element render prop composes event handlers from all sources', async () => {
+      const callOrder: string[] = []
+      const Card = createCard({
+        onMouseEnter: () => callOrder.push('base'),
+      })
+      const { getByRole } = await render(
+        <Card
+          onMouseEnter={() => callOrder.push('consumer')}
+          render={<a href="/path" onMouseEnter={() => callOrder.push('render-el')} />}
+        >
+          Link
+        </Card>,
+      )
+      const link = getByRole('link')
+      await link.hover()
+      expect(callOrder).toEqual(['consumer', 'base', 'render-el'])
+    })
   })
 
   describe('event handler composition', () => {

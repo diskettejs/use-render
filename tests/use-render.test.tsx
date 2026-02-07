@@ -214,6 +214,77 @@ describe('useRender', () => {
       await expect.element(link).toHaveAttribute('href', '/path')
     })
 
+    test('element render prop merges its own className with resolved className', async () => {
+      const Button = createBtn({ className: 'base' })
+      const { getByRole } = await render(
+        <Button className="consumer" render={<a href="/path" className="render-el" />}>
+          Link
+        </Button>,
+      )
+      const link = getByRole('link')
+      await expect.element(link).toHaveAttribute('href', '/path')
+      // All three classNames should be present: base + consumer merged by resolveClassName, then merged with the render element's own className
+      await expect.element(link).toHaveClass('render-el')
+      await expect.element(link).toHaveClass('base')
+      await expect.element(link).toHaveClass('consumer')
+    })
+
+    test('element render prop merges its own style with resolved style', async () => {
+      const Button = createBtn({ style: { padding: '10px' } })
+      const { getByRole } = await render(
+        <Button
+          style={{ color: 'red' }}
+          render={<a href="/path" style={{ fontWeight: 'bold' }} />}
+        >
+          Link
+        </Button>,
+      )
+      const link = getByRole('link')
+      // The render element's own style, the base style, and the consumer style should all be present
+      await expect.element(link).toHaveStyle({
+        fontWeight: 'bold',
+        padding: '10px',
+        color: 'red',
+      })
+    })
+
+    test('element render prop style: resolved style wins over render element style on conflict', async () => {
+      const Button = createBtn({ style: { padding: '10px' } })
+      const { getByRole } = await render(
+        <Button
+          style={{ padding: '20px' }}
+          render={<a href="/path" style={{ padding: '5px', fontWeight: 'bold' }} />}
+        >
+          Link
+        </Button>,
+      )
+      const link = getByRole('link')
+      // Consumer style (20px) overrides base (10px), and resolved style overrides render element's style (5px)
+      await expect.element(link).toHaveStyle({
+        padding: '20px',
+        fontWeight: 'bold',
+      })
+    })
+
+    test('element render prop composes its own event handlers with resolved handlers', async () => {
+      const callOrder: string[] = []
+      const Button = createBtn({
+        onMouseEnter: () => callOrder.push('base'),
+      })
+      const { getByRole } = await render(
+        <Button
+          onMouseEnter={() => callOrder.push('consumer')}
+          render={<a href="/path" onMouseEnter={() => callOrder.push('render-el')} />}
+        >
+          Link
+        </Button>,
+      )
+      const link = getByRole('link')
+      await link.hover()
+      // All three handlers should have run: consumer first, then base, then render-el
+      expect(callOrder).toEqual(['consumer', 'base', 'render-el'])
+    })
+
     test('function render prop with children as function', async () => {
       const Button = createBtn()
       const { getByRole } = await render(

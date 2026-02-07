@@ -1,8 +1,9 @@
 import type { ElementType, ReactNode } from 'react'
-import { cloneElement, createElement, isValidElement } from 'react'
+import { createElement, isValidElement } from 'react'
 import type { ComponentProps, DataAttributes } from './types.ts'
 import { useComposedRef } from './use-composed-ref.ts'
 import {
+  cloneRenderElement,
   isFunction,
   isString,
   mergeProps,
@@ -74,7 +75,7 @@ export function useRender<T extends ElementType, S>(
 
   // For `<Component render={<a />} />`
   if (isValidElement(render)) {
-    return cloneElement(render, resolvedProps, resolvedChildren)
+    return cloneRenderElement(render, resolvedProps, resolvedChildren)
   }
 
   // For `<Component render={(props) => <a {...props} />)} />`

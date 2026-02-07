@@ -7,9 +7,9 @@ import type {
   ReactNode,
   Ref,
 } from 'react'
-import { cloneElement, createElement, isValidElement } from 'react'
+import { createElement, isValidElement } from 'react'
 import type { DataAttributes } from '../types.ts'
-import { cx, isFunction, isString, mergeProps } from '../utils.ts'
+import { cloneRenderElement, cx, isFunction, isString, mergeProps } from '../utils.ts'
 
 export type SlotRenderer = (
   props: HTMLAttributes<any> & { ref?: Ref<any> | undefined },
@@ -81,7 +81,7 @@ export function renderSlot<T extends ElementType>(
 
   // For `<Component render={<a />} />`
   if (isValidElement(render)) {
-    return cloneElement(render, resolvedProps, resolvedChildren)
+    return cloneRenderElement(render, resolvedProps, resolvedChildren)
   }
 
   // For `<Component render={(props) => <a {...props} />)} />`

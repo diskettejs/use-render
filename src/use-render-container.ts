@@ -1,6 +1,5 @@
 import type { CSSProperties, ElementType, JSX, ReactNode, Ref } from 'react'
 import {
-  cloneElement,
   createElement,
   isValidElement,
   useCallback,
@@ -15,6 +14,7 @@ import type {
 } from './types.ts'
 import { useComposedRef } from './use-composed-ref.ts'
 import {
+  cloneRenderElement,
   isFunction,
   isString,
   mergeProps,
@@ -173,14 +173,14 @@ export function useRenderContainer<
   // Container component that handles render prop
   const Container = useCallback(
     ({ children: containerChildren }: { children?: ReactNode }): ReactNode => {
+      // For `<Component render={<section />} />`
+      if (isValidElement(render)) {
+        return cloneRenderElement(render, resolvedProps, containerChildren)
+      }
+
       const propsWithChildren = {
         ...resolvedProps,
         children: containerChildren,
-      }
-
-      // For `<Component render={<section />} />`
-      if (isValidElement(render)) {
-        return cloneElement(render, propsWithChildren)
       }
 
       // For `<Component render={(props, state) => <section {...props} />} />`
