@@ -1,5 +1,17 @@
 # @diskette/use-render
 
+## 0.13.0
+
+### Minor Changes
+
+- 948a999: fix: compose refs in renderSlot instead of silently dropping baseProps ref
+
+  Move mergeRefs and assignRef from use-composed-ref.ts to utils.ts so they
+  can be used outside of hooks. Update renderSlot to extract ref from both
+  baseProps and props, composing them via mergeRefs. Previously, if both sides
+  provided a ref, baseProps.ref was silently overwritten by props.ref in
+  mergeProps since ref doesn't match the on[A-Z] event handler pattern.
+
 ## 0.12.0
 
 ### Minor Changes
