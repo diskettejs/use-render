@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactElement, ReactNode } from 'react'
+import type { CSSProperties, ReactElement, ReactNode, Ref, RefCallback } from 'react'
 import { cloneElement } from 'react'
 import type { ClassName, Style } from './types.ts'
 
@@ -93,6 +93,39 @@ export function resolveStyle<State>(
  */
 export function cx(...args: Array<string | null | false | 0 | undefined>) {
   return args.filter(Boolean).join(' ') || undefined
+}
+
+/**
+ * Assigns a value to a ref.
+ */
+export function assignRef<T>(
+  ref: Ref<T> | undefined | null,
+  value: T | null,
+): ReturnType<RefCallback<T>> {
+  if (typeof ref === 'function') {
+    return ref(value)
+  } else if (ref) {
+    ref.current = value
+  }
+}
+
+/**
+ * Composes multiple refs into a single ref callback.
+ */
+export function mergeRefs<T>(refs: (Ref<T> | undefined)[]): Ref<T> {
+  return (value: T | null) => {
+    const cleanups: (() => void)[] = []
+
+    for (const ref of refs) {
+      const cleanup = assignRef(ref, value)
+      const isCleanup = typeof cleanup === 'function'
+      cleanups.push(isCleanup ? cleanup : () => assignRef(ref, null))
+    }
+
+    return () => {
+      for (const cleanup of cleanups) cleanup()
+    }
+  }
 }
 
 /**

@@ -9,7 +9,7 @@ import type {
 } from 'react'
 import { createElement, isValidElement } from 'react'
 import type { DataAttributes } from '../types.ts'
-import { cloneRenderElement, cx, isFunction, isString, mergeProps } from '../utils.ts'
+import { cloneRenderElement, cx, isFunction, isString, mergeProps, mergeRefs } from '../utils.ts'
 
 export type SlotRenderer = (
   props: HTMLAttributes<any> & { ref?: Ref<any> | undefined },
@@ -27,7 +27,7 @@ export interface RenderSlotOptions<T extends ElementType> {
 
 /**
  * Pure function for rendering slot elements with render prop support and prop merging.
- * RSC-compatible version of useRenderSlot without ref handling.
+ * RSC-compatible version of useRenderSlot. Composes refs from baseProps and props via mergeRefs.
  *
  * @example
  * ```tsx
@@ -59,9 +59,10 @@ export function renderSlot<T extends ElementType>(
     className: baseClassName,
     style: baseStyle,
     children: baseChildren,
+    ref: baseRef,
     ...base
   } = baseProps
-  const { className, style, children, render, ...rest } = props
+  const { className, style, children, render, ref, ...rest } = props
 
   const resolvedClassName = cx(baseClassName, className)
   const resolvedStyle =
@@ -75,6 +76,9 @@ export function renderSlot<T extends ElementType>(
   }
   if (typeof resolvedStyle === 'object') {
     resolvedProps.style = resolvedStyle
+  }
+  if (baseRef || ref) {
+    resolvedProps.ref = mergeRefs([baseRef, ref])
   }
 
   const resolvedChildren = children ?? baseChildren
